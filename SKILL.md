@@ -25,16 +25,11 @@ dependency:
 cd skills/business-expert
 
 # 生成单个客户报告
-python scripts/cli.py --client=客户编号
+python scripts/report_generator_integrated.py 客户名称
 
-# 生成所有客户报告
-python scripts/cli.py --client=all
-
-# 指定输出目录
-python scripts/cli.py --client=客户编号 --output=自定义输出目录
-
-# 详细输出模式
-python scripts/cli.py --client=客户编号 --verbose
+# 示例
+python scripts/report_generator_integrated.py 高义
+python scripts/report_generator_integrated.py CBD
 ```
 
 ### 环境变量配置
@@ -60,7 +55,7 @@ export OUTPUT_DIR="C:\\your\\output\\path"
 2. **订阅续约与续费** - 订阅明细、续约分析、收款情况
 3. **实施优化情况** - 实施费用、优化趋势、模式分析
 4. **运维情况** - 工单统计、问题分类、SLA分析
-5. **客户经营信息** - 网络搜索信息（待开发）
+5. **客户经营情报** - 网络搜索经营动态、机遇与挑战分析
 6. **综合经营分析** - 价值分级、健康度评估、机会风险分析
 
 ## 📁 详细文档
@@ -77,16 +72,15 @@ export OUTPUT_DIR="C:\\your\\output\\path"
 ## 🔧 脚本说明
 
 ### 主要脚本
-- `scripts/cli.py` - 命令行接口（主入口）
-- `scripts/report_generator.py` - 报告生成器（协调各模块）
-- `scripts/data_loader.py` - 数据加载和预处理
-- `scripts/llm_analyzer.py` - LLM分析器
-
-### 数据模块
-- `scripts/part1_basic_profile.py` - Part 1: 客户基础档案
-- `scripts/part2_subscription.py` - Part 2: 订阅续约与续费
-- `scripts/part3_implementation.py` - Part 3: 实施优化情况
-- `scripts/part4_operations.py` - Part 4: 运维情况
+- `scripts/report_generator_integrated.py` - 主入口，生成完整经营分析报告
+- `scripts/data_loader.py` - 数据加载模块
+- `scripts/llm_client.py` - LLM客户端封装
+- `scripts/part1_basic_profile.py` - Part1客户基础档案
+- `scripts/part2_subscription.py` - Part2订阅续约分析
+- `scripts/part3_implementation.py` - Part3实施优化分析
+- `scripts/part4_operations.py` - Part4运维情况分析
+- `scripts/part5_business_intelligence.py` - Part5客户经营情报（Tavily搜索+LLM分析）
+- `scripts/part6_comprehensive.py` - Part6综合经营分析
 
 ## ⚙️ 配置说明
 
