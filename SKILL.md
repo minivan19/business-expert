@@ -75,12 +75,16 @@ export OUTPUT_DIR="C:\\your\\output\\path"
 - `scripts/report_generator_integrated.py` - 主入口，生成完整经营分析报告
 - `scripts/data_loader.py` - 数据加载模块
 - `scripts/llm_client.py` - LLM客户端封装
+- `scripts/md2docx.py` - Markdown转Word转换脚本
 - `scripts/part1_basic_profile.py` - Part1客户基础档案
 - `scripts/part2_subscription.py` - Part2订阅续约分析
 - `scripts/part3_implementation.py` - Part3实施优化分析
 - `scripts/part4_operations.py` - Part4运维情况分析
 - `scripts/part5_business_intelligence.py` - Part5客户经营情报（Tavily搜索+LLM分析）
 - `scripts/part6_comprehensive.py` - Part6综合经营分析
+
+### 模板文件
+- `templates/business.docx` - Word报告模板
 
 ## ⚙️ 配置说明
 
@@ -113,6 +117,7 @@ Skill配置在 `openclaw.yaml` 中，支持以下配置：
 ├── 2. 订阅续约与续费
 ├── 3. 实施优化情况
 ├── 4. 运维情况
+├── 5. 客户经营情报
 └── 6. 综合经营分析
 ```
 
@@ -133,7 +138,7 @@ Skill配置在 `openclaw.yaml` 中，支持以下配置：
 ### 日志查看
 ```bash
 # 启用详细日志
-python scripts/cli.py --client=客户编号 --verbose
+python scripts/report_generator_integrated.py 高义 --debug
 
 # 查看错误日志
 检查 output_dir/logs/ 目录
@@ -142,11 +147,12 @@ python scripts/cli.py --client=客户编号 --verbose
 ## 🔄 更新与维护
 
 ### 版本信息
-- **当前版本**: 1.0.0
+- **当前版本**: 1.1.0
 - **创建时间**: 2026-03-16
-- **最后更新**: 2026-03-17
+- **最后更新**: 2026-03-18
 
 ### 更新记录
+- 2026-03-18: 修复Part2-6智能分析流程，确保基于已生成内容分析；集成md2docx脚本和Word模板；优化报告格式
 - 2026-03-17: 按照Skill creator规范进行规范化改进
 - 2026-03-16: 初始版本创建
 
