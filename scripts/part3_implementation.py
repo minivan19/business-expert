@@ -60,15 +60,21 @@ class ImplementationAnalyzer:
         
         try:
             # 3.1 实施概览
-            content += self._generate_overview(df_fixed, df_dayspan)
+            overview_content = self._generate_overview(df_fixed, df_dayspan)
+            content += overview_content
             
             # 3.2 固定金额合同明细
-            content += self._generate_fixed_details(df_fixed)
+            fixed_content = self._generate_fixed_details(df_fixed)
+            content += fixed_content
             
             # 3.3 人天框架合同明细
-            content += self._generate_dayspan_details(df_dayspan)
+            dayspan_content = self._generate_dayspan_details(df_dayspan)
+            content += dayspan_content
             
-            # 3.4 智能分析
+            # 保存已生成的分析内容，供3.4使用
+            self._generated_analysis = overview_content + "\n" + fixed_content + "\n" + dayspan_content
+            
+            # 3.4 智能分析（基于已生成的分析内容）
             content += self._generate_intelligent_analysis(df_fixed, df_dayspan)
             
             logger.info("实施优化情况分析完成")
@@ -264,34 +270,30 @@ class ImplementationAnalyzer:
         return content
     
     def _generate_intelligent_analysis(self, df_fixed, df_dayspan):
-        """生成3.4智能分析"""
+        """生成3.4智能分析（基于已生成的分析内容）"""
         content = "### 3.4 智能分析\n\n"
         
-        # 准备本章节统计好的数据供LLM使用
-        chapter_data = self._prepare_chapter_summary(df_fixed, df_dayspan)
+        # 使用已生成的分析内容供LLM分析
+        generated_content = getattr(self, '_generated_analysis', '') or ''
         
-        # 调用LLM进行智能分析（使用本章节统计数据）
+        # 调用LLM进行智能分析（使用已生成的分析内容）
         if LLM_AVAILABLE:
             try:
-                logger.info("开始调用LLM进行实施优化智能分析（本章节统计数据）...")
+                logger.info("开始调用LLM进行实施优化智能分析（基于3.1-3.3分析内容）...")
                 llm_client = get_llm_client()
-                llm_result = llm_client.analyze_implementation_full(chapter_data, "")
+                llm_result = llm_client.analyze_implementation_from_content(generated_content)
                 
                 if llm_result:
                     # 清理LLM输出
                     cleaned = self._clean_llm_output(llm_result)
-                    content += "### 3.4 智能分析\n\n"
                     content += f"{cleaned}\n\n"
                 else:
-                    content += "### 3.4 智能分析\n\n"
                     content += "- LLM调用失败\n\n"
                     
             except Exception as e:
                 logger.error(f"LLM调用失败: {e}")
-                content += "### 3.4 智能分析\n\n"
                 content += f"- LLM调用异常: {str(e)}\n\n"
         else:
-            content += "### 3.4 智能分析\n\n"
             content += "- LLM不可用\n\n"
         
         return content

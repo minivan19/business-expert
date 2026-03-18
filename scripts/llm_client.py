@@ -181,6 +181,39 @@ class LLMClient:
 
         return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
     
+    def analyze_subscription_from_content(self, content: str) -> str:
+        """
+        基于已生成的章节内容进行订阅续约分析
+        
+        Args:
+            content: 已生成的2.1-2.3章节markdown内容
+            
+        Returns:
+            str: 分析结果
+        """
+        system_prompt = """你是一位资深的客户成功经理，擅长分析客户的订阅续约情况。
+请基于已经生成好的2.1-2.3章节内容（包含续约概览、订阅明细、收款明细）进行智能分析。
+分析要点：
+1. 订阅状态和金额趋势
+2. 续约风险评估（降价风险、流失风险）
+3. 续费收款情况（坏账风险、逾期情况）
+4. 给出具体的建议
+
+**重要要求：**
+1. 必须基于提供的章节内容分析，不要自行补充数据
+2. 如果章节中没有某项数据，明确说明"数据缺失"而非假设
+3. 输出必须限制在300字以内，语言精炼，直击重点
+4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
+
+        prompt = f"""请基于以下已生成的2.1-2.3章节内容进行智能分析：
+
+## 2.1-2.3 章节内容
+{content}
+
+请基于以上章节内容给出分析，**输出限制在300字以内**。"""
+
+        return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
+    
     def analyze_implementation_full(self, fixed_data: str, dayspan_data: str) -> str:
         """
         分析实施优化情况（统计数据）
@@ -211,6 +244,39 @@ class LLMClient:
 
         return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
     
+    def analyze_implementation_from_content(self, content: str) -> str:
+        """
+        基于已生成的章节内容进行实施优化分析
+        
+        Args:
+            content: 已生成的3.1-3.3章节markdown内容
+            
+        Returns:
+            str: 分析结果
+        """
+        system_prompt = """你是一位资深的实施顾问，擅长分析客户的实施优化情况。
+请基于已经生成好的3.1-3.3章节内容（包含实施概览、固定合同明细、人天框架明细）进行智能分析。
+分析要点：
+1. 实施合同执行情况
+2. 人天框架使用情况
+3. 优化空间和建议
+4. 给出具体的建议
+
+**重要要求：**
+1. 必须基于提供的章节内容分析，不要自行补充数据
+2. 如果章节中没有某项数据，明确说明"数据缺失"而非假设
+3. 输出必须限制在300字以内，语言精炼，直击重点
+4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
+
+        prompt = f"""请基于以下已生成的3.1-3.3章节内容进行智能分析：
+
+## 3.1-3.3 章节内容
+{content}
+
+请基于以上章节内容给出分析，**输出限制在300字以内**。"""
+
+        return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
+    
     def analyze_operations_full(self, operations_data: str) -> str:
         """
         分析运维情况（完整数据）
@@ -238,6 +304,39 @@ class LLMClient:
 {operations_data}
 
 请基于以上本章节统计数据给出分析，**输出限制在300字以内**。"""
+
+        return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
+    
+    def analyze_operations_from_content(self, content: str) -> str:
+        """
+        基于已生成的章节内容进行运维分析
+        
+        Args:
+            content: 已生成的4.1-4.3章节markdown内容
+            
+        Returns:
+            str: 分析结果
+        """
+        system_prompt = """你是一位资深的运维经理，擅长分析客户的运维情况。
+请基于已经生成好的4.1-4.3章节内容（包含运维概览、模块分布、类型分布）进行智能分析。
+分析要点：
+1. 系统稳定性评估
+2. 运维工单分布和趋势
+3. 潜在风险预警
+4. 给出具体的建议
+
+**重要要求：**
+1. 必须基于提供的章节内容分析，不要自行补充数据
+2. 如果章节中没有某项数据，明确说明"数据缺失"而非假设
+3. 输出必须限制在300字以内，语言精炼，直击重点
+4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
+
+        prompt = f"""请基于以下已生成的4.1-4.3章节内容进行智能分析：
+
+## 4.1-4.3 章节内容
+{content}
+
+请基于以上章节内容给出分析，**输出限制在300字以内**。"""
 
         return self.call(prompt, system_prompt, max_tokens=600) or "LLM分析失败"
     

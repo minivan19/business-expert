@@ -45,15 +45,21 @@ class OperationsAnalyzer:
         
         try:
             # 4.1 运维概览
-            content += self._generate_overview(df_ops)
+            overview_content = self._generate_overview(df_ops)
+            content += overview_content
             
             # 4.2 模块分布
-            content += self._generate_module_distribution(df_ops)
+            module_content = self._generate_module_distribution(df_ops)
+            content += module_content
             
             # 4.3 类型分布
-            content += self._generate_type_distribution(df_ops)
+            type_content = self._generate_type_distribution(df_ops)
+            content += type_content
             
-            # 4.4 智能分析
+            # 保存已生成的分析内容，供4.4使用
+            self._generated_analysis = overview_content + "\n" + module_content + "\n" + type_content
+            
+            # 4.4 智能分析（基于已生成的分析内容）
             content += self._generate_intelligent_analysis(df_ops)
             
             logger.info("运维情况分析完成")
@@ -235,34 +241,30 @@ class OperationsAnalyzer:
         return content
     
     def _generate_intelligent_analysis(self, df):
-        """生成4.4智能分析"""
+        """生成4.4智能分析（基于已生成的分析内容）"""
         content = "### 4.4 智能分析\n\n"
         
-        # 准备本章节统计好的数据供LLM使用
-        chapter_data = self._prepare_chapter_summary(df)
+        # 使用已生成的分析内容供LLM分析
+        generated_content = getattr(self, '_generated_analysis', '') or ''
         
-        # 调用LLM进行智能分析（使用本章节统计数据）
+        # 调用LLM进行智能分析（使用已生成的分析内容）
         if LLM_AVAILABLE:
             try:
-                logger.info("开始调用LLM进行运维智能分析（本章节统计数据）...")
+                logger.info("开始调用LLM进行运维智能分析（基于4.1-4.3分析内容）...")
                 llm_client = get_llm_client()
-                llm_result = llm_client.analyze_operations_full(chapter_data)
+                llm_result = llm_client.analyze_operations_from_content(generated_content)
                 
                 if llm_result:
                     # 清理LLM输出
                     cleaned = self._clean_llm_output(llm_result)
-                    content += "### 4.4 智能分析\n\n"
                     content += f"{cleaned}\n\n"
                 else:
-                    content += "### 4.4 智能分析\n\n"
                     content += "- LLM调用失败\n\n"
                     
             except Exception as e:
                 logger.error(f"LLM调用失败: {e}")
-                content += "### 4.4 智能分析\n\n"
                 content += f"- LLM调用异常: {str(e)}\n\n"
         else:
-            content += "### 4.4 智能分析\n\n"
             content += "- LLM不可用\n\n"
         
         return content

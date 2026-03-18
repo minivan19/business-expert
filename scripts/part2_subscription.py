@@ -63,15 +63,21 @@ class SubscriptionAnalyzer:
         
         try:
             # 2.1 概览
-            content += self._generate_overview(df_subscription, df_collection)
+            overview_content = self._generate_overview(df_subscription, df_collection)
+            content += overview_content
             
             # 2.2 订阅明细
-            content += self._generate_subscription_details(df_subscription)
+            details_content = self._generate_subscription_details(df_subscription)
+            content += details_content
             
             # 2.3 续费收款明细
-            content += self._generate_collection_details(df_collection)
+            collection_content = self._generate_collection_details(df_collection)
+            content += collection_content
             
-            # 2.4 智能分析
+            # 保存已生成的分析内容，供2.4使用
+            self._generated_analysis = overview_content + "\n" + details_content + "\n" + collection_content
+            
+            # 2.4 智能分析（基于已生成的分析内容）
             content += self._generate_intelligent_analysis(df_subscription, df_collection)
             
             logger.info("订阅续约与续费分析完成")
@@ -239,34 +245,30 @@ class SubscriptionAnalyzer:
         return content
     
     def _generate_intelligent_analysis(self, df_subscription, df_collection):
-        """生成2.4智能分析"""
+        """生成2.4智能分析（基于已生成的分析内容）"""
         content = "### 2.4 智能分析\n\n"
         
-        # 准备本章节统计好的数据供LLM使用
-        chapter_data = self._prepare_full_data(df_subscription, df_collection)
+        # 使用已生成的分析内容供LLM分析
+        generated_content = getattr(self, '_generated_analysis', '') or ''
         
-        # 调用LLM进行智能分析（使用本章节统计数据）
+        # 调用LLM进行智能分析（使用已生成的分析内容）
         if LLM_AVAILABLE:
             try:
-                logger.info("开始调用LLM进行订阅续约智能分析（本章节统计数据）...")
+                logger.info("开始调用LLM进行订阅续约智能分析（基于2.1-2.3分析内容）...")
                 llm_client = get_llm_client()
-                llm_result = llm_client.analyze_subscription_full(chapter_data, "")
+                llm_result = llm_client.analyze_subscription_from_content(generated_content)
                 
                 if llm_result:
-                    # 清理LLM输出中的标题和序号（如"2.4"、"2.4.1"等）
+                    # 清理LLM输出中的标题和序号
                     cleaned = self._clean_llm_output(llm_result)
-                    content += "### 2.4 智能分析\n\n"
                     content += f"{cleaned}\n\n"
                 else:
-                    content += "### 2.4 智能分析\n\n"
                     content += "- LLM调用失败\n\n"
                     
             except Exception as e:
                 logger.error(f"LLM调用失败: {e}")
-                content += "### 2.4 智能分析\n\n"
                 content += f"- LLM调用异常: {str(e)}\n\n"
         else:
-            content += "### 2.4 智能分析\n\n"
             content += "- LLM不可用\n\n"
         
         return content
