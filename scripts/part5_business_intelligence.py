@@ -235,7 +235,12 @@ class BusinessIntelligenceAnalyzer:
 重要：只基于提供的新闻信息分析，不要臆测。
 **不要输出任何标题（如"分析"、"结论"等），直接输出正文内容。**"""
 
-        prompt = f"""请分析以下客户的经营情报：
+        from datetime import datetime
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        prompt = f"""【当前日期】{current_date}
+
+请分析以下客户的经营情报：
 
 ## 1. 客户名称
 {self.client_full_name}（简称：{self.client_short_name}）

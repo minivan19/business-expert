@@ -9,8 +9,13 @@ import json
 import logging
 import requests
 from typing import Optional, Dict, Any
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+# 获取当前日期
+def get_current_date():
+    return datetime.now().strftime('%Y-%m-%d')
 
 # DeepSeek API配置
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-340ed7819c2346508c0a46a80df85999")
@@ -205,7 +210,13 @@ class LLMClient:
 3. 输出必须限制在300字以内，语言精炼，直击重点
 4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
 
-        prompt = f"""请基于以下已生成的2.1-2.3章节内容进行智能分析：
+        prompt = f"""【当前日期】{get_current_date()}
+
+请基于以下已生成的2.1-2.3章节内容进行智能分析：
+
+【重要】请根据【当前日期】{get_current_date()}判断款项是否逾期：
+- 如果"考核收款日期"早于当前日期，且"已收款金额"为0，则该款项已逾期
+- 例如：考核收款日期2025-09-30，当前日期2026-03-19，则该款项已逾期超过5个月
 
 ## 2.1-2.3 章节内容
 {content}
@@ -268,7 +279,9 @@ class LLMClient:
 3. 输出必须限制在300字以内，语言精炼，直击重点
 4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
 
-        prompt = f"""请基于以下已生成的3.1-3.3章节内容进行智能分析：
+        prompt = f"""【当前日期】{get_current_date()}
+
+请基于以下已生成的3.1-3.3章节内容进行智能分析：
 
 ## 3.1-3.3 章节内容
 {content}
@@ -331,7 +344,9 @@ class LLMClient:
 3. 输出必须限制在300字以内，语言精炼，直击重点
 4. 不要输出任何标题（如"分析"、"结论"等），直接输出正文内容"""
 
-        prompt = f"""请基于以下已生成的4.1-4.3章节内容进行智能分析：
+        prompt = f"""【当前日期】{get_current_date()}
+
+请基于以下已生成的4.1-4.3章节内容进行智能分析：
 
 ## 4.1-4.3 章节内容
 {content}
@@ -507,7 +522,9 @@ class LLMClient:
 3. 输出必须控制在800字以内，语言精炼，直击重点
 4. 不要输出任何标题（如"一、"、"（一）"、"分析如下"等），直接输出正文内容"""
 
-        prompt = f"""请基于以下已生成的Part1-5章节内容进行综合经营分析：
+        prompt = f"""【当前日期】{get_current_date()}
+
+请基于以下已生成的Part1-5章节内容进行综合经营分析：
 
 ## Part1-5 章节内容
 {content}
