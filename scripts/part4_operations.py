@@ -127,8 +127,12 @@ class OperationsAnalyzer:
         content += "|------|----------|---------|----------|\n"
         
         for _, row in yearly_stats.iterrows():
-            year = int(row['年份']) if pd.notna(row['年份']) else '未知'
-            content += f"| {year} | {row['工单数量']} | {row['工时总和']} | {row['单均工时']} |\n"
+            # 处理空值
+            year = int(row['年份']) if pd.notna(row['年份']) else '-'
+            工单数量 = int(row['工单数量']) if pd.notna(row['工单数量']) else '-'
+            工时总和 = row['工时总和'] if pd.notna(row['工时总和']) else '-'
+            单均工时 = row['单均工时'] if pd.notna(row['单均工时']) else '-'
+            content += f"| {year} | {工单数量} | {工时总和} | {单均工时} |\n"
         
         content += "\n"
         return content
@@ -174,6 +178,8 @@ class OperationsAnalyzer:
         content += "|------|" + "|".join(["---" for _ in years]) + "|------|\n"
         
         for module, row in pivot.iterrows():
+            # 处理空值为"-"
+            module = "-" if pd.isna(module) or str(module).strip() == "" else str(module)
             values = [str(int(row[y])) for y in years]
             values.append(str(int(row['总计'])))
             content += f"| {module} | " + " | ".join(values) + " |\n"
@@ -233,6 +239,8 @@ class OperationsAnalyzer:
         content += "|------|" + "|".join(["---" for _ in years]) + "|------|\n"
         
         for type_name, row in pivot.iterrows():
+            # 处理空值为"-"
+            type_name = "-" if pd.isna(type_name) or str(type_name).strip() == "" else str(type_name)
             values = [str(int(row[y])) for y in years]
             values.append(str(int(row['总计'])))
             content += f"| {type_name} | " + " | ".join(values) + " |\n"

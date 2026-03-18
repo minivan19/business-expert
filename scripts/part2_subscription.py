@@ -189,7 +189,9 @@ class SubscriptionAnalyzer:
         content += "|" + "|".join([" --- " for _ in df_select.columns]) + "|\n"
 
         for _, row in df_select.iterrows():
-            content += "| " + " | ".join(str(v) for v in row.values) + " |\n"
+            # 处理空值为"-"
+            row_values = ["-" if pd.isna(v) or str(v).strip() == "" else str(v) for v in row.values]
+            content += "| " + " | ".join(row_values) + " |\n"
 
         content += "\n"
         return content
@@ -239,7 +241,9 @@ class SubscriptionAnalyzer:
         content += "|" + "|".join([" --- " for _ in df_select.columns]) + "|\n"
 
         for _, row in df_select.iterrows():
-            content += "| " + " | ".join(str(v) for v in row.values) + " |\n"
+            # 处理空值为"-"
+            row_values = ["-" if pd.isna(v) or str(v).strip() == "" else str(v) for v in row.values]
+            content += "| " + " | ".join(row_values) + " |\n"
 
         content += "\n"
         return content

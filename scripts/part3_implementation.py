@@ -131,7 +131,7 @@ class ImplementationAnalyzer:
             
             # 汇总行
             total_all = total_fixed + total_dayspan
-            content += f"| **汇总** | **{total_fixed:,.0f}元** | **{total_dayspan:,.0f}元** | **{total_all:,.0f}元** |\n\n"
+            content += f"| 汇总 | {total_fixed:,.0f}元 | {total_dayspan:,.0f}元 | {total_all:,.0f}元 |\n\n"
         else:
             content += "| 年份 | 固定合同金额 | 人天框架金额 | 汇总金额 |\n"
             content += "|------|-------------|-------------|----------|\n"
@@ -199,7 +199,9 @@ class ImplementationAnalyzer:
         content += "|" + "|".join([" --- " for _ in df_select.columns]) + "|\n"
         
         for _, row in df_select.iterrows():
-            content += "| " + " | ".join(str(v) for v in row.values) + " |\n"
+            # 处理空值为"-"
+            row_values = ["-" if pd.isna(v) or str(v).strip() == "" else str(v) for v in row.values]
+            content += "| " + " | ".join(row_values) + " |\n"
         
         content += "\n"
         return content
@@ -264,7 +266,9 @@ class ImplementationAnalyzer:
         content += "|" + "|".join([" --- " for _ in df_select.columns]) + "|\n"
         
         for _, row in df_select.iterrows():
-            content += "| " + " | ".join(str(v) for v in row.values) + " |\n"
+            # 处理空值为"-"
+            row_values = ["-" if pd.isna(v) or str(v).strip() == "" else str(v) for v in row.values]
+            content += "| " + " | ".join(row_values) + " |\n"
         
         content += "\n"
         return content

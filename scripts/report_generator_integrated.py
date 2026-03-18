@@ -200,8 +200,9 @@ class IntegratedReportGenerator:
             try:
                 part3 = ImplementationAnalyzer()
                 # 检查所需数据是否存在
-                if 'part3_fixed' in data and 'part3_dayspan' in data:
-                    part3_content = part3.analyze(data['part3_fixed'], data['part3_dayspan'])
+                if 'part3_fixed' in data and data['part3_fixed'] is not None:
+                    df_dayspan = data.get('part3_dayspan')
+                    part3_content = part3.analyze(data['part3_fixed'], df_dayspan)
                     if part3_content:
                         report_parts.append(part3_content)
                     else:
