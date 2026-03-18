@@ -88,10 +88,6 @@ class ComprehensiveAnalyzer:
                 content += self._generate_customer_value(part2_summary, part3_summary)
                 content += "\n*注：LLM综合分析生成失败*\n\n"
             
-            # 数据摘要（保留供参考）
-            data_summary = self._prepare_data_summary(part1_data, part2_summary, part3_summary, part4_summary)
-            content += f"\n*数据摘要供参考*:\n```\n{data_summary}\n```\n\n"
-            
             logger.info("综合经营分析完成")
             return content
             

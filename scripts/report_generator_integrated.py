@@ -46,10 +46,9 @@ class IntegratedReportGenerator:
         # 临时目录（保留）
         self.temp_dir = os.path.join(self.base_dir, "_temp")
         
-        # Markdown转Word技能路径
-        self.md_to_word_skill_dir = r"C:\Users\mingh\.openclaw\workspace\skills\markdown-to-word-skill"
-        self.converter_script = os.path.join(self.md_to_word_skill_dir, "scripts", "md2docx.py")
-        self.business_template = os.path.join(self.md_to_word_skill_dir, "templates", "business.docx")
+        # Markdown转Word脚本路径（本Skill内）
+        self.md_to_word_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "md2docx.py")
+        self.business_template = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates", "business.docx")
         
         # 创建基础目录
         os.makedirs(self.temp_dir, exist_ok=True)
@@ -338,7 +337,6 @@ class IntegratedReportGenerator:
             
             # 7. 报告结尾
             report_parts.append("---")
-            report_parts.append("## 报告说明")
             report_parts.append("1. 本报告由商务专家系统自动生成")
             report_parts.append("2. 数据来源: 客户业务系统")
             report_parts.append(f"3. 分析时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -347,6 +345,12 @@ class IntegratedReportGenerator:
             report_parts.append("6. 格式: Markdown + Word")
             
             return "\n\n".join(report_parts)
+        
+        # 清理多余的连续空行（将3个以上连续换行替换为2个）
+        import re
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        
+        return content
             
         except Exception as e:
             logger.error(f"生成报告内容时出错: {e}")
@@ -367,8 +371,8 @@ class IntegratedReportGenerator:
         """
         try:
             # 检查转换脚本和模板是否存在
-            if not os.path.exists(self.converter_script):
-                logger.error(f"转换脚本不存在: {self.converter_script}")
+            if not os.path.exists(self.md_to_word_script):
+                logger.error(f"转换脚本不存在: {self.md_to_word_script}")
                 return False
             
             if not os.path.exists(self.business_template):
@@ -378,7 +382,7 @@ class IntegratedReportGenerator:
             # 构建转换命令
             cmd = [
                 "python",
-                self.converter_script,
+                self.md_to_word_script,
                 "--input", md_path,
                 "--output", docx_path,
                 "--template", self.business_template
