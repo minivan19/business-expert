@@ -279,6 +279,11 @@ class IntegratedReportGenerator:
             try:
                 part6 = ComprehensiveAnalyzer()
                 
+                # 保存Part1-5已生成的markdown内容，供Part6使用
+                part1_5_content = ""
+                for part in report_parts:
+                    part1_5_content += part + "\n\n"
+                
                 # 准备part2_summary（需要提取current_arr）
                 part2_summary = {}
                 if 'part2' in data and data['part2'] is not None and not data['part2'].empty:
@@ -313,33 +318,13 @@ class IntegratedReportGenerator:
                 
                 logger.info(f"Part6参数准备: part2_summary={part2_summary}, part3_summary={part3_summary}")
                 
-                # 准备完整数据传给Part6
-                part1_full = data.get('part1', None)
-                part2_full = {'订阅': data.get('part2', None), '收款': data.get('part4', None)}
-                part3_full = {'固定合同': data.get('part3_fixed', None), '人天框架': data.get('part3_dayspan', None)}
-                part4_full = data.get('part5_ops', None)
-                
-                # Part5分析结果（从前面已经生成）
-                part5_analysis = None
-                # 如果Part5已经生成了分析，尝试从report_parts中提取
-                for part in report_parts:
-                    if '## 5. 客户经营情报' in part:
-                        # 提取Part5内容
-                        idx = part.find('### 5.1 经营动态')
-                        if idx > 0:
-                            part5_analysis = part[idx+150:idx+500]  # 取经营动态部分
-                        break
-                
+                # 传入Part1-5已生成的完整内容供LLM分析
                 part6_content = part6.analyze(
                     part1_data=part1_data, 
                     part2_summary=part2_summary, 
                     part3_summary=part3_summary, 
                     part4_summary=part4_summary,
-                    part1_full=part1_full,
-                    part2_full=part2_full,
-                    part3_full=part3_full,
-                    part4_full=part4_full,
-                    part5_analysis=part5_analysis
+                    part1_5_full=part1_5_content  # 传入已生成的Part1-5内容
                 )
                 if part6_content:
                     report_parts.append(part6_content)

@@ -31,7 +31,7 @@ class ComprehensiveAnalyzer:
         pass
     
     def analyze(self, part1_data, part2_summary, part3_summary, part4_summary, 
-                part1_full=None, part2_full=None, part3_full=None, part4_full=None, part5_analysis=None):
+                part1_5_full=None):
         """
         分析综合经营情况
         
@@ -40,11 +40,7 @@ class ComprehensiveAnalyzer:
             part2_summary: Part2订阅续约数据摘要
             part3_summary: Part3实施优化数据摘要
             part4_summary: Part4运维数据摘要
-            part1_full: Part1完整数据
-            part2_full: Part2完整数据（订阅+收款）
-            part3_full: Part3完整数据（实施）
-            part4_full: Part4完整数据（运维）
-            part5_analysis: Part5经营情报分析结果
+            part1_5_full: Part1-5已生成的完整markdown内容
             
         Returns:
             str: Markdown格式的分析报告
@@ -54,31 +50,31 @@ class ComprehensiveAnalyzer:
         content = "## 6. 综合经营分析\n\n"
         
         try:
-            # 直接使用LLM进行综合分析（一次性输出完整分析）
+            # 直接使用LLM进行综合分析（基于已生成的Part1-5内容）
             llm_result = None
             try:
-                # 安全检查是否有完整数据
-                has_part1 = part1_full is not None
-                has_part2 = part2_full is not None and isinstance(part2_full, dict)
-                has_part3 = part3_full is not None and isinstance(part3_full, dict)
-                has_part4 = part4_full is not None
-                
-                if has_part1 or has_part2 or has_part3 or has_part4:
-                    # 准备完整数据
-                    part1_str = self._format_part1_full(part1_full) if has_part1 else "无数据"
-                    part2_str = self._format_part2_full(part2_full) if has_part2 else "无数据"
-                    part3_str = self._format_part3_full(part3_full) if has_part3 else "无数据"
-                    part4_str = self._format_part4_full(part4_full) if has_part4 else "无数据"
-                    part5_str = part5_analysis if part5_analysis else "无数据"
-                    
-                    logger.info("开始调用LLM进行Part6综合分析（完整数据）...")
+                # 优先使用已生成的Part1-5内容
+                if part1_5_full:
+                    logger.info("开始调用LLM进行Part6综合分析（基于Part1-5已生成内容）...")
                     llm_client = _get_llm_client()
-                    llm_result = llm_client.analyze_comprehensive_full(
-                        part1_str, part2_str, part3_str, part4_str, part5_str
-                    )
+                    llm_result = llm_client.analyze_comprehensive_from_content(part1_5_full)
                     
                     if llm_result:
                         logger.info(f"Part6 LLM分析完成，长度: {len(llm_result)} 字")
+                else:
+                    # 如果没有已生成内容，回退到原始数据方式
+                    logger.warning("Part1-5内容为空，回退到原始数据分析")
+                    has_part1 = part1_data is not None
+                    
+                    if has_part1:
+                        part1_str = self._format_part1_full(part1_data)
+                        
+                        logger.info("开始调用LLM进行Part6综合分析（原始数据）...")
+                        llm_client = _get_llm_client()
+                        llm_result = llm_client.analyze_comprehensive_full(
+                            part1_str, "无数据", "无数据", "无数据", "无数据"
+                        )
+                        
             except Exception as e:
                 logger.error(f"Part6 LLM调用失败: {e}")
             
