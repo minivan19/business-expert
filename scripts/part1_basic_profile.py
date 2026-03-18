@@ -16,20 +16,35 @@ class BasicProfileAnalyzer:
     """客户基础档案分析器"""
     
     def __init__(self):
+        # 字段映射：报表字段名 -> Excel列名
         self.field_mapping = {
+            # 1.1 基本信息
             '客户简称': '客户简称',
-            '真实服务对象': '客户全称',
-            '计费ARR': '计费ARR',
+            '客户全称': '真实服务对象',
+            '计费ARR': '销售ARR',
             '服务阶段': '服务阶段',
             '客户状态': '客户状态',
-            '客户所属区域': '所属区域',
-            '行业': '行业',
+            '所属区域': '客户所属区域',
+            # 1.2 业务概况
+            '行业': '所属行业',
             '主要产品': '主要产品',
             '营收规模': '营收规模',
-            '首次购买时间': '首次购买时间',
-            '最近购买时间': '最近购买时间',
-            '累计购买金额': '累计购买金额',
-            '购买次数': '购买次数'
+            '总部地点': '客户位置',
+            # 1.3 购买模块
+            '购买模块': '购买模块',
+            # 1.4 项目团队
+            '客户成功经理': '客户成功经理',
+            '项目经理': '项目经理',
+            '运维经理': '运维主责',
+            '交付顾问': '交付经理',
+            '销售经理': '销售',
+            # 1.5 决策地图
+            '采购总': '采购高层（姓名-职位）',
+            '采购经理': '采购中层（姓名-职位）',
+            'IT总': 'IT高层（姓名-职位）',
+            'IT经理': 'IT中层（姓名-职位）',
+            '对接人': '客户对接人',
+            '决策链': '决策链',
         }
     
     def analyze(self, df_basic):
@@ -66,11 +81,11 @@ class BasicProfileAnalyzer:
             # 1.3 购买信息
             content += self._generate_purchase_info(row)
             
-            # 1.4 联系信息（如果存在）
-            content += self._generate_contact_info(row)
+            # 1.4 项目团队
+            content += self._generate_project_team(row)
             
-            # 1.5 决策信息（如果存在）
-            content += self._generate_decision_info(row)
+            # 1.5 决策地图
+            content += self._generate_decision_map(row)
             
             logger.info("客户基础档案分析完成")
             return content
@@ -91,21 +106,15 @@ class BasicProfileAnalyzer:
         basic_fields = ['客户简称', '客户全称', '计费ARR', '服务阶段', '客户状态', '所属区域']
         
         for field in basic_fields:
-            display_name = self.field_mapping.get(field, field)
-            if field in ['客户全称', '真实服务对象']:
-                # 处理客户全称字段
-                value = row.get('真实服务对象', row.get('客户全称', 'N/A'))
-            elif field == '行业':
-                # 尝试获取行业信息
-                value = self._get_industry_value(row)
-            else:
-                value = row.get(field, 'N/A')
+            excel_col = self.field_mapping.get(field, field)
+            value = row.get(excel_col, 'N/A')
             
-            # 格式化ARR金额
-            if field == '计费ARR' and isinstance(value, (int, float)):
+            if pd.isna(value) or str(value).strip() == '':
+                value = 'N/A'
+            elif field == '计费ARR' and isinstance(value, (int, float)):
                 value = f"{value:,.0f} 元"
             
-            content += f"| {display_name} | {value} |\n"
+            content += f"| {field} | {value} |\n"
         
         content += "\n"
         return content
@@ -118,136 +127,77 @@ class BasicProfileAnalyzer:
         content += "| 指标 | 内容 |\n"
         content += "|------|------|\n"
         
-        business_fields = ['行业', '主要产品', '营收规模']
+        business_fields = ['行业', '主要产品', '营收规模', '总部地点']
         
         for field in business_fields:
             display_name = self.field_mapping.get(field, field)
+            value = row.get(display_name, 'N/A')
             
-            if field == '行业':
-                value = self._get_industry_value(row)
-            else:
-                value = row.get(field, 'N/A')
+            if pd.isna(value) or str(value).strip() == '':
+                value = 'N/A'
             
             content += f"| {display_name} | {value} |\n"
-        
-        # 添加其他业务信息（如果存在）
-        additional_fields = ['员工规模', '总部地点', '上市情况', '成立时间']
-        for field in additional_fields:
-            if field in row and pd.notna(row[field]) and str(row[field]).strip():
-                value = row[field]
-                content += f"| {field} | {value} |\n"
         
         content += "\n"
         return content
     
     def _generate_purchase_info(self, row):
         """生成购买信息"""
-        content = "### 1.3 购买信息\n\n"
+        content = "### 1.3 购买模块\n\n"
         
-        # 使用表格格式
-        content += "| 指标 | 内容 |\n"
-        content += "|------|------|\n"
+        # 只显示购买模块，不使用表格
+        purchase_module = row.get(self.field_mapping.get('购买模块', '购买模块'), None)
         
-        purchase_fields = ['首次购买时间', '最近购买时间', '累计购买金额', '购买次数']
-        
-        for field in purchase_fields:
-            display_name = self.field_mapping.get(field, field)
-            value = row.get(field, 'N/A')
-            
-            # 格式化时间和金额
-            if '时间' in field and pd.notna(value):
-                try:
-                    if isinstance(value, pd.Timestamp):
-                        value = value.strftime('%Y-%m-%d')
-                    else:
-                        # 尝试解析为日期
-                        value = pd.to_datetime(value).strftime('%Y-%m-%d')
-                except:
-                    pass
-            
-            if '金额' in field and isinstance(value, (int, float)):
-                value = f"{value:,.0f} 元"
-            
-            if field == '购买次数' and isinstance(value, (int, float)):
-                value = f"{value:.0f} 次"
-                # 计算平均购买金额
-                if '累计购买金额' in row and pd.notna(row['累计购买金额']) and row['累计购买金额'] > 0:
-                    avg_amount = row['累计购买金额'] / value if value > 0 else 0
-                    content += f"| 平均购买金额 | {avg_amount:,.0f} 元 |\n"
-            
-            content += f"| {display_name} | {value} |\n"
-        
-        # 计算购买频率（如果数据足够）
-        if '首次购买时间' in row and '最近购买时间' in row and '购买次数' in row:
-            try:
-                first_purchase = pd.to_datetime(row['首次购买时间'])
-                last_purchase = pd.to_datetime(row['最近购买时间'])
-                purchase_count = float(row['购买次数']) if pd.notna(row['购买次数']) else 0
-                
-                if purchase_count > 1 and pd.notna(first_purchase) and pd.notna(last_purchase):
-                    days_diff = (last_purchase - first_purchase).days
-                    if days_diff > 0:
-                        frequency = days_diff / (purchase_count - 1) if purchase_count > 1 else 0
-                        content += f"| 平均购买频率 | 每 {frequency:.0f} 天 |\n"
-            except:
-                pass
+        if pd.notna(purchase_module) and str(purchase_module).strip():
+            content += f"- {purchase_module}\n"
+        else:
+            content += "- 暂无数据\n"
         
         content += "\n"
         return content
     
-    def _generate_contact_info(self, row):
-        """生成联系信息"""
-        content = ""
+    def _generate_project_team(self, row):
+        """生成项目团队信息"""
+        content = "### 1.4 项目团队\n\n"
         
-        # 检查是否存在联系信息字段
-        contact_fields = ['联系人', '联系电话', '联系邮箱', '联系地址']
-        has_contact_info = any(field in row and pd.notna(row[field]) and str(row[field]).strip() for field in contact_fields)
+        # 使用表格格式
+        content += "| 角色 | 姓名 |\n"
+        content += "|------|------|\n"
         
-        if has_contact_info:
-            content += "### 1.4 联系信息\n\n"
-            content += "| 指标 | 内容 |\n"
-            content += "|------|------|\n"
+        team_fields = ['客户成功经理', '项目经理', '运维经理', '交付顾问', '销售经理']
+        
+        for role in team_fields:
+            excel_col = self.field_mapping.get(role, role)
+            value = row.get(excel_col, 'N/A')
             
-            for field in contact_fields:
-                if field in row and pd.notna(row[field]) and str(row[field]).strip():
-                    value = row[field]
-                    content += f"| {field} | {value} |\n"
+            if pd.isna(value) or str(value).strip() == '':
+                value = '-'
             
-            content += "\n"
+            content += f"| {role} | {value} |\n"
         
+        content += "\n"
         return content
     
-    def _generate_decision_info(self, row):
-        """生成决策信息"""
-        content = ""
+    def _generate_decision_map(self, row):
+        """生成决策地图"""
+        content = "### 1.5 决策地图\n\n"
         
-        # 检查是否存在决策信息字段
-        decision_fields = ['决策人', '决策人职位', 'IT负责人', '采购负责人']
-        has_decision_info = any(field in row and pd.notna(row[field]) and str(row[field]).strip() for field in decision_fields)
+        # 使用表格格式
+        content += "| 角色 | 信息 |\n"
+        content += "|------|------|\n"
         
-        if has_decision_info:
-            content += "### 1.5 决策信息\n\n"
-            content += "| 角色 | 姓名 | 职位 |\n"
-            content += "|------|------|------|\n"
-            
-            # 决策人
-            if '决策人' in row and pd.notna(row['决策人']) and str(row['决策人']).strip():
-                name = row['决策人']
-                position = row.get('决策人职位', '')
-                content += f"| 决策人 | {name} | {position} |\n"
-            
-            # IT负责人
-            if 'IT负责人' in row and pd.notna(row['IT负责人']) and str(row['IT负责人']).strip():
-                name = row['IT负责人']
-                content += f"| IT负责人 | {name} | |\n"
-            
-            # 采购负责人
-            if '采购负责人' in row and pd.notna(row['采购负责人']) and str(row['采购负责人']).strip():
-                name = row['采购负责人']
-                content += f"| 采购负责人 | {name} | |\n"
-            
-            content += "\n"
+        decision_fields = ['采购总', '采购经理', 'IT总', 'IT经理', '对接人', '决策链']
         
+        for role in decision_fields:
+            excel_col = self.field_mapping.get(role, role)
+            value = row.get(excel_col, 'N/A')
+            
+            if pd.isna(value) or str(value).strip() == '':
+                value = '-'
+            
+            content += f"| {role} | {value} |\n"
+        
+        content += "\n"
         return content
     
     def _get_industry_value(self, row):
