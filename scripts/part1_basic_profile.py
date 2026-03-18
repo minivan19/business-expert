@@ -195,10 +195,25 @@ class BasicProfileAnalyzer:
             if pd.isna(value) or str(value).strip() == '':
                 value = '-'
             
+            # 清理敏感信息（换行、电话、邮箱）
+            value = self._clean_decision_value(value)
+            
             content += f"| {role} | {value} |\n"
         
         content += "\n"
         return content
+    
+    def _clean_decision_value(self, value):
+        """清理决策地图中的敏感信息"""
+        value = str(value)
+        import re
+        # 替换换行符为空格
+        value = value.replace('\n', ' ').replace('\r', ' ')
+        # 移除手机号（1开头的11位数字）→ 替换为脱敏
+        value = re.sub(r'1\d{10}', '***', value)
+        # 移除邮箱 → 替换为脱敏
+        value = re.sub(r'[\w\.-]+@[\w\.-]+', '***', value)
+        return value
     
     def _get_industry_value(self, row):
         """获取行业信息"""
