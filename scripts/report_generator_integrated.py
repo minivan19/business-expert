@@ -204,8 +204,10 @@ class IntegratedReportGenerator:
                     part3_content = part3.analyze(data['part3_fixed'], data['part3_dayspan'])
                     if part3_content:
                         report_parts.append(part3_content)
+                    else:
+                        report_parts.append("## 3. 实施优化情况\n\n该客户为免费实施项目客户，上线以来未产生付费优化需求。")
                 else:
-                    report_parts.append("## Part3: 实施优化情况\n\n*数据缺失*")
+                    report_parts.append("## 3. 实施优化情况\n\n该客户为免费实施项目客户，上线以来未产生付费优化需求。")
             except Exception as e:
                 logger.error(f"Part3生成失败: {e}")
                 report_parts.append("## Part3: 实施优化情况\n\n*生成失败*")

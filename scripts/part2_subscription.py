@@ -169,7 +169,7 @@ class SubscriptionAnalyzer:
             df_select = df_select.sort_values('订阅有效期从', ascending=False)
 
         # 格式化日期 - 先转换为datetime再格式化
-        for col in ['订阅有效期从', '订阅有效期至']:
+        for col in ['签约日期', '订阅有效期从', '订阅有效期至']:
             if col in df_select.columns:
                 # 先转换为datetime
                 df_select[col] = pd.to_datetime(df_select[col], errors='coerce')
