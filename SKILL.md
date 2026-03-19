@@ -2,7 +2,7 @@
 name: business-expert
 description: >
   商务专家 - 360°客户档案与经营分析。基于客户档案数据生成经营分析报告，采用混合模式（脚本处理结构化数据+LLM智能分析）。
-  
+
   **当以下情况时使用此Skill**：
   (1) 需要生成客户经营分析报告
   (2) 需要分析客户订阅、实施、运维数据
@@ -21,141 +21,70 @@ dependency:
 
 ### 生成客户经营分析报告
 ```bash
-# 进入skill目录
-cd skills/business-expert
+cd skills/business-expert/scripts
 
-# 生成单个客户报告
-python scripts/report_generator_integrated.py 客户名称
+# 生成报告
+python report_generator_integrated.py 客户名称
 
 # 示例
-python scripts/report_generator_integrated.py 高义
-python scripts/report_generator_integrated.py CBD
+python report_generator_integrated.py 高义
+python report_generator_integrated.py CBD
+
+# 跳过LLM分析（只生成数据）
+python report_generator_integrated.py CBD --skip-llm
+
+# 调试模式
+python report_generator_integrated.py CBD --debug
 ```
 
-### 环境变量配置
+### 环境变量
 ```bash
-# 设置API密钥
 export DEEPSEEK_API_KEY="sk-your-api-key"
-
-# 设置数据路径（可选）
-export CLIENT_DATA_PATH="C:\\your\\path\\to\\客户档案"
-export OUTPUT_DIR="C:\\your\\output\\path"
 ```
 
 ## 🎯 核心功能
 
 ### 混合模式分析
-- **脚本处理**：结构化数据（Excel表格）由Python脚本直接处理，确保准确性
-- **LLM智能分析**：需要推理和分析的部分调用大模型，提供深度洞察
-- **优势**：结合脚本的准确性和LLM的智能性，降低成本减少幻觉
+- **脚本处理**：结构化数据（Excel表格）由Python脚本直接处理
+- **LLM智能分析**：需要推理的部分调用大模型
 
 ### 6层数据框架
-完整覆盖客户经营的各个方面：
 1. **客户基础档案** - 基本信息、业务概况、购买信息
 2. **订阅续约与续费** - 订阅明细、续约分析、收款情况
 3. **实施优化情况** - 实施费用、优化趋势、模式分析
 4. **运维情况** - 工单统计、问题分类、SLA分析
-5. **客户经营情报** - 网络搜索经营动态、机遇与挑战分析
+5. **客户经营情报** - 网络搜索经营动态
 6. **综合经营分析** - 价值分级、健康度评估、机会风险分析
 
 ## 📁 详细文档
 
-### 数据框架与架构
 - [数据框架](references/data_framework.md) - 6层数据框架详细说明
-- [架构设计](references/architecture.md) - 混合模式架构和工作流程
-- [输出格式](references/output_formats.md) - 报告格式规范和示例
-- [Prompt约束](references/prompt_constraints.md) - LLM使用规范和模板
-
-### 参考手册
 - [确定性分析手册](references/deterministic_analysis_manual.md) - 标准化分析流程和输出格式
+- [Prompt约束](references/prompt_constraints.md) - LLM使用规范和模板
 
 ## 🔧 脚本说明
 
-### 主要脚本
-- `scripts/report_generator_integrated.py` - 主入口，生成完整经营分析报告
-- `scripts/data_loader.py` - 数据加载模块
-- `scripts/llm_client.py` - LLM客户端封装
-- `scripts/md2docx.py` - Markdown转Word转换脚本
-- `scripts/part1_basic_profile.py` - Part1客户基础档案
-- `scripts/part2_subscription.py` - Part2订阅续约分析
-- `scripts/part3_implementation.py` - Part3实施优化分析
-- `scripts/part4_operations.py` - Part4运维情况分析
-- `scripts/part5_business_intelligence.py` - Part5客户经营情报（Tavily搜索+LLM分析）
-- `scripts/part6_comprehensive.py` - Part6综合经营分析
-
-### 模板文件
-- `templates/business.docx` - Word报告模板
+| 脚本 | 说明 |
+|------|------|
+| `report_generator_integrated.py` | **主入口**，生成完整报告 |
+| `data_loader.py` | 数据加载模块 |
+| `llm_client.py` | LLM客户端封装 |
+| `md2docx.py` | Markdown转Word |
+| `part1_basic_profile.py` | Part1客户基础档案 |
+| `part2_subscription.py` | Part2订阅续约分析 |
+| `part3_implementation.py` | Part3实施优化分析 |
+| `part4_operations.py` | Part4运维情况分析 |
+| `part5_business_intelligence.py` | Part5客户经营情报 |
+| `part6_comprehensive.py` | Part6综合经营分析 |
 
 ## ⚙️ 配置说明
 
-### 配置文件
-Skill配置在 `openclaw.yaml` 中，支持以下配置：
+报告保存到 `C:\Users\mingh\client-data\{客户名称}\` 目录下。
 
-1. **数据路径配置**：
-   - `client_data_path`: 客户数据根目录
-   - `output_dir`: 报告输出目录
+**Word转换**：支持两种模式 — 有模板时使用模板样式，无模板时使用纯样式生成。
 
-2. **LLM配置**：
-   - `api_key_env`: API密钥环境变量名
-   - `model`: 使用的模型
-   - `temperature`: 温度参数（控制随机性）
+## 🛠️ 依赖
 
-3. **功能开关**：
-   - 可以启用/禁用各个分析模块
-
-### 环境变量优先级
-1. 命令行参数（最高优先级）
-2. 环境变量
-3. 配置文件默认值
-
-## 📊 输出示例
-
-### 报告结构
-```
-{客户}_经营分析报告.md
-├── 1. 客户基础档案
-├── 2. 订阅续约与续费
-├── 3. 实施优化情况
-├── 4. 运维情况
-├── 5. 客户经营情报
-└── 6. 综合经营分析
-```
-
-### 关键指标
-- **客户价值分级**：A/B/C/D级
-- **经营健康度**：订阅/收款/运维健康度
-- **机会分析**：增购/交叉销售机会
-- **风险预警**：流失/收款风险
-
-## 🛠️ 故障排除
-
-### 常见问题
-1. **依赖安装失败**：确保Python版本>=3.8，使用 `pip install -r requirements.txt`
-2. **API调用失败**：检查API密钥和环境变量设置
-3. **数据文件找不到**：检查 `client_data_path` 配置
-4. **权限问题**：确保有读写输出目录的权限
-
-### 日志查看
 ```bash
-# 启用详细日志
-python scripts/report_generator_integrated.py 高义 --debug
-
-# 查看错误日志
-检查 output_dir/logs/ 目录
+pip install pandas openpyxl requests python-docx
 ```
-
-## 🔄 更新与维护
-
-### 版本信息
-- **当前版本**: 1.1.0
-- **创建时间**: 2026-03-16
-- **最后更新**: 2026-03-18
-
-### 更新记录
-- 2026-03-18: 修复Part2-6智能分析流程，确保基于已生成内容分析；集成md2docx脚本和Word模板；优化报告格式
-- 2026-03-17: 按照Skill creator规范进行规范化改进
-- 2026-03-16: 初始版本创建
-
----
-
-**提示**: 详细的技术文档和参考手册请查看 `references/` 目录下的对应文件。

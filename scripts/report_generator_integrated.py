@@ -361,23 +361,25 @@ class IntegratedReportGenerator:
             bool: 转换是否成功
         """
         try:
-            # 检查转换脚本和模板是否存在
+            # 检查转换脚本是否存在
             if not os.path.exists(self.md_to_word_script):
                 logger.error(f"转换脚本不存在: {self.md_to_word_script}")
                 return False
 
-            if not os.path.exists(self.business_template):
-                logger.error(f"商业模板不存在: {self.business_template}")
-                return False
-
-            # 构建转换命令
+            # 构建转换命令（有模板用模板，无模板则不传--template）
             cmd = [
                 "python",
                 self.md_to_word_script,
                 "--input", md_path,
-                "--output", docx_path,
-                "--template", self.business_template
+                "--output", docx_path
             ]
+
+            # 只有模板存在时才添加template参数
+            if os.path.exists(self.business_template):
+                cmd.extend(["--template", self.business_template])
+                logger.info(f"使用商业模板: {self.business_template}")
+            else:
+                logger.info("商业模板不存在，使用纯样式生成Word")
 
             logger.info(f"执行Word转换命令: {' '.join(cmd)}")
 
