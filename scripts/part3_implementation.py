@@ -451,7 +451,7 @@ if __name__ == "__main__":
     import os
     
     # 测试加载数据
-    client_path = r"C:\Users\mingh\client-data\raw\客户档案\CBD"
+    client_path = r"/Users/limingheng/AI\client-data\raw\客户档案\CBD"
     fixed_path = os.path.join(client_path, "实施合同行", "固定金额台账.xlsx")
     dayspan_path = os.path.join(client_path, "实施合同行", "人天框架台账.xlsx")
     

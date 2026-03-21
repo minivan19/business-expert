@@ -50,43 +50,48 @@ class ComprehensiveAnalyzer:
         content = "## 6. 综合经营分析\n\n"
         
         try:
-            # 直接使用LLM进行综合分析（基于已生成的Part1-5内容）
+            # 使用结构化数据摘要进行分析（避免长文本导致连接中断）
             llm_result = None
             try:
-                # 优先使用已生成的Part1-5内容
-                if part1_5_full:
-                    logger.info("开始调用LLM进行Part6综合分析（基于Part1-5已生成内容）...")
-                    llm_client = _get_llm_client()
-                    llm_result = llm_client.analyze_comprehensive_from_content(part1_5_full)
+                logger.info("开始调用LLM进行Part6综合分析（结构化数据方式）...")
+                llm_client = _get_llm_client()
+                
+                # 格式化各部分数据为字符串
+                part1_str = self._format_part1_full(part1_data)
+                part2_str = self._format_part2_summary(part2_summary)
+                part3_str = self._format_part3_summary(part3_summary)
+                part4_str = self._format_part4_summary(part4_summary)
+                
+                # part5无结构化数据，传摘要提示
+                part5_placeholder = "（见前述Part5客户经营情报章节）"
+                
+                llm_result = llm_client.call(
+                    prompt=(
+                        f"客户基本信息：{part1_str}\n\n"
+                        f"订阅续约数据：{part2_str}\n\n"
+                        f"实施优化数据：{part3_str}\n\n"
+                        f"运维情况：{part4_str}\n\n"
+                        f"请基于以上数据给出综合经营分析，包括：客户价值分级、经营健康度评估、机会分析、风险预警、行动建议。输出500字以内。"
+                    ),
+                    system_prompt="你是一位资深的商务专家，擅长客户经营分析。请基于数据给出简洁的综合分析。",
+                    max_tokens=600
+                )
+                
+                if llm_result:
+                    logger.info(f"Part6 LLM分析完成，长度: {len(llm_result)} 字")
                     
-                    if llm_result:
-                        logger.info(f"Part6 LLM分析完成，长度: {len(llm_result)} 字")
-                else:
-                    # 如果没有已生成内容，回退到原始数据方式
-                    logger.warning("Part1-5内容为空，回退到原始数据分析")
-                    has_part1 = part1_data is not None
-                    
-                    if has_part1:
-                        part1_str = self._format_part1_full(part1_data)
-                        
-                        logger.info("开始调用LLM进行Part6综合分析（原始数据）...")
-                        llm_client = _get_llm_client()
-                        llm_result = llm_client.analyze_comprehensive_full(
-                            part1_str, "无数据", "无数据", "无数据", "无数据"
-                        )
-                        
             except Exception as e:
                 logger.error(f"Part6 LLM调用失败: {e}")
             
             # 直接输出LLM分析结果，不分小点
-            if llm_result:
+            if llm_result and llm_result != "LLM分析失败":
                 # 清理LLM输出
                 cleaned = self._clean_llm_output(llm_result)
                 content += f"{cleaned}\n\n"
             else:
                 # 如果LLM失败，至少显示客户价值分级
                 content += self._generate_customer_value(part2_summary, part3_summary)
-                content += "\n*注：LLM综合分析生成失败*\n\n"
+                content += "\n*注：LLM综合分析生成失败（已重试3次仍中断）*\n\n"
             
             logger.info("综合经营分析完成")
             return content
@@ -235,6 +240,45 @@ class ComprehensiveAnalyzer:
         
         return "\n".join(lines) if lines else "无有效数据"
     
+    def _format_part2_summary(self, summary):
+        """格式化Part2订阅摘要"""
+        if not summary:
+            return "无数据"
+        lines = []
+        if 'current_arr' in summary:
+            lines.append(f"当前ARR: {summary['current_arr']:,.0f}元")
+        if 'total_planned' in summary:
+            lines.append(f"计划收款总额: {summary['total_planned']:,.0f}元")
+        if 'total_received' in summary:
+            lines.append(f"已收款金额: {summary['total_received']:,.0f}元")
+        if 'total_overdue' in summary:
+            lines.append(f"逾期未收款: {summary['total_overdue']:,.0f}元")
+        return "\n".join(lines) if lines else "无有效摘要"
+
+    def _format_part3_summary(self, summary):
+        """格式化Part3实施摘要"""
+        if not summary or 'yearly_data' not in summary:
+            return "无数据"
+        lines = []
+        yearly = summary['yearly_data']
+        for year in sorted(yearly.keys(), reverse=True)[:3]:
+            data = yearly[year]
+            fixed = data.get('固定合同金额', 0)
+            dayspan = data.get('人天框架金额', 0)
+            lines.append(f"{year}年: 固定合同{data.get('固定合同笔数', 0)}笔 {fixed:,.0f}元 | 人天框架{data.get('人天框架笔数', 0)}笔 {dayspan:,.0f}元")
+        return "\n".join(lines) if lines else "无数据"
+
+    def _format_part4_summary(self, summary):
+        """格式化Part4运维摘要"""
+        if not summary:
+            return "无数据"
+        lines = []
+        if 'total_tickets' in summary:
+            lines.append(f"总工单数: {summary['total_tickets']}")
+        if 'total_hours' in summary:
+            lines.append(f"总工时: {summary['total_hours']:.1f}小时")
+        return "\n".join(lines) if lines else "无有效摘要"
+
     def _format_part2_full(self, data_dict):
         """格式化Part2完整数据"""
         if not data_dict:

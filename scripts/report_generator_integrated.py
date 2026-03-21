@@ -41,7 +41,7 @@ class IntegratedReportGenerator:
         self.skip_llm = skip_llm
 
         # 基础目录
-        self.base_dir = r"C:\Users\mingh\client-data"
+        self.base_dir = r"/Users/limingheng/AI\client-data"
 
         # 临时目录（保留）
         self.temp_dir = os.path.join(self.base_dir, "_temp")

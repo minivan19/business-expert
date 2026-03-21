@@ -79,7 +79,7 @@ export DEEPSEEK_API_KEY="sk-your-api-key"
 
 ## ⚙️ 配置说明
 
-报告保存到 `C:\Users\mingh\client-data\{客户名称}\` 目录下。
+报告保存到 `/Users/limingheng/AI\client-data\{客户名称}\` 目录下。
 
 **Word转换**：支持两种模式 — 有模板时使用模板样式，无模板时使用纯样式生成。
 

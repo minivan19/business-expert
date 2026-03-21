@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 # 客户简称→全称映射
-MAPPING_FILE = r"C:\Users\mingh\client-data\raw\_mapping.json"
+MAPPING_FILE = r"/Users/limingheng/AI\client-data\raw\_mapping.json"
 
 
 def get_full_company_name(client_short_name: str) -> str:

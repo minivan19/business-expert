@@ -240,7 +240,7 @@
 
 ### 标准目录结构
 ```
-C:\Users\mingh\client-data\raw\客户档案\{客户}\
+/Users/limingheng/AI\client-data\raw\客户档案\{客户}\
 ├── 基础数据/
 │   └── 客户主数据.xlsx
 ├── 订阅合同行/

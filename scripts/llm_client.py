@@ -8,6 +8,7 @@ import os
 import json
 import logging
 import requests
+import time
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -45,86 +46,94 @@ class LLMClient:
         logger.info(f"Model: {self.model}")
     
     def call(self, prompt: str, system_prompt: Optional[str] = None, 
-             temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
+             temperature: Optional[float] = None, max_tokens: Optional[int] = None,
+             max_retries: int = 3, retry_delay: float = 3.0) -> Optional[str]:
         """
-        调用LLM生成回复
+        调用LLM生成回复（带重试机制）
         
         Args:
             prompt: 用户提示
             system_prompt: 系统提示（可选）
             temperature: 温度参数（可选）
             max_tokens: 最大token数（可选）
+            max_retries: 最大重试次数（默认3）
+            retry_delay: 重试间隔秒数（默认3）
             
         Returns:
             str: LLM回复内容，如果失败返回None
         """
-        try:
-            # 构建请求头
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}"
-            }
-            
-            # 构建消息
-            messages = []
-            
-            if system_prompt:
-                messages.append({
-                    "role": "system",
-                    "content": system_prompt
-                })
-            
+        # 构建请求头
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        # 构建消息
+        messages = []
+        
+        if system_prompt:
             messages.append({
-                "role": "user",
-                "content": prompt
+                "role": "system",
+                "content": system_prompt
             })
-            
-            # 构建请求体
-            payload = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": temperature or self.temperature,
-                "max_tokens": max_tokens or self.max_tokens
-            }
-            
-            logger.info(f"开始调用LLM API...")
-            logger.info(f"Prompt长度: {len(prompt)} 字符")
-            
-            # 发送请求
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=payload,
-                timeout=120  # 120秒超时（完整数据需要更长时间）
-            )
-            
-            # 检查响应
-            if response.status_code == 200:
-                result = response.json()
+        
+        messages.append({
+            "role": "user",
+            "content": prompt
+        })
+        
+        # 构建请求体
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature or self.temperature,
+            "max_tokens": max_tokens or self.max_tokens
+        }
+        
+        logger.info(f"开始调用LLM API...")
+        logger.info(f"Prompt长度: {len(prompt)} 字符")
+        
+        last_error = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = requests.post(
+                    self.api_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=(30, 180)  # (connect_timeout, read_timeout)
+                )
                 
-                if "choices" in result and len(result["choices"]) > 0:
-                    content = result["choices"][0]["message"]["content"]
-                    logger.info(f"LLM调用成功，回复长度: {len(content)} 字符")
-                    return content
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    if "choices" in result and len(result["choices"]) > 0:
+                        content = result["choices"][0]["message"]["content"]
+                        logger.info(f"LLM调用成功，回复长度: {len(content)} 字符")
+                        return content
+                    else:
+                        logger.error(f"LLM返回格式异常: {result}")
+                        return None
                 else:
-                    logger.error(f"LLM返回格式异常: {result}")
-                    return None
-            else:
-                logger.error(f"LLM API调用失败，状态码: {response.status_code}")
-                logger.error(f"错误信息: {response.text}")
-                return None
-                
-        except requests.exceptions.Timeout:
-            logger.error("LLM API调用超时")
-            return None
-        except requests.exceptions.RequestException as e:
-            logger.error(f"LLM API请求异常: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"LLM调用未知异常: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+                    logger.error(f"LLM API调用失败，状态码: {response.status_code}，错误: {response.text}")
+                    last_error = f"HTTP {response.status_code}"
+                    
+            except requests.exceptions.Timeout:
+                logger.error(f"LLM API调用超时（第{attempt}次）")
+                last_error = "Timeout"
+            except requests.exceptions.RequestException as e:
+                logger.error(f"LLM API请求异常（第{attempt}次）: {e}")
+                last_error = str(e)
+            except Exception as e:
+                logger.error(f"LLM调用未知异常: {e}")
+                last_error = str(e)
+            
+            if attempt < max_retries:
+                logger.info(f"{retry_delay}秒后重试（第{attempt+1}/{max_retries}次）...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # 指数退避
+        
+        logger.error(f"LLM调用最终失败，已重试{max_retries}次，最后错误: {last_error}")
+        return None
     
     def analyze_subscription(self, data_summary: str) -> str:
         """
@@ -492,7 +501,7 @@ class LLMClient:
 
 请基于以上Part1-5的完整数据，给出综合经营分析。**输出必须控制在800字以内**。"""
 
-        return self.call(prompt, system_prompt, max_tokens=1500) or "LLM分析失败"
+        return self.call(prompt, system_prompt, max_tokens=800) or "LLM分析失败"
     
     def analyze_comprehensive_from_content(self, content: str) -> str:
         """
@@ -531,7 +540,7 @@ class LLMClient:
 
 请基于以上章节内容给出综合经营分析，**输出必须控制在800字以内**。"""
 
-        return self.call(prompt, system_prompt, max_tokens=1500) or "LLM分析失败"
+        return self.call(prompt, system_prompt, max_tokens=800) or "LLM分析失败"
 
 
 # 全局LLM客户端实例
