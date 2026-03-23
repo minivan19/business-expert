@@ -395,7 +395,7 @@ if __name__ == "__main__":
     import os
 
     # 测试加载数据
-    client_path = r"/Users/limingheng/AI\client-data\raw\客户档案\CBD"
+    client_path = f"/Users/limingheng/AI/client-data/raw/客户档案/{CLIENT_NAME}"
     sub_path = os.path.join(client_path, "订阅合同行", "订阅明细.xlsx")
     coll_path = os.path.join(client_path, "订阅合同收款情况", "订阅合同收款情况.xlsx")
 

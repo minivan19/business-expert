@@ -26,7 +26,7 @@ class DataLoader:
         """
         if client_data_path is None:
             # 默认路径，可以从环境变量或配置文件中读取
-            self.client_data_path = r"/Users/limingheng/AI\client-data\raw\客户档案"
+            self.client_data_path = r"/Users/limingheng/AI/client-data/raw/客户档案"
         else:
             self.client_data_path = client_data_path
         
