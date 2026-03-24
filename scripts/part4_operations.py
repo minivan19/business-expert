@@ -424,7 +424,7 @@ class OperationsAnalyzer:
 # 测试代码
 if __name__ == "__main__":
     # 加载所有运维工单文件
-    ops_dir = r"/Users/limingheng/AI/client-data/raw/客户档案/CBD/运维工单"
+    ops_dir = r"/Users/limingheng/AI/client-data/客户档案/CBD/运维工单"
     
     if os.path.exists(ops_dir):
         files = glob(os.path.join(ops_dir, "*.xlsx"))

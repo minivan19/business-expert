@@ -14,8 +14,8 @@ logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 CLIENT = '虎牙'
-CLIENT_DIR = Path('/Users/limingheng/AI/client-data/raw/客户档案') / CLIENT
-OUTPUT_DIR = Path('/Users/limingheng/AI/client-data') / CLIENT
+CLIENT_DIR = Path('/Users/limingheng/AI/client-data/客户档案') / CLIENT
+OUTPUT_DIR = Path('/Users/limingheng/AI/client-data/客户报告') / CLIENT
 
 def load_2025_work_orders():
     ops_dir = CLIENT_DIR / '运维工单'
